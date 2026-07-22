@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Singularity: interactive black hole galaxy in Three.js" />
+    <title>Singularity</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="scene-canvas" aria-label="3D galaxy canvas"></canvas>
+
+      <div id="loading-screen" role="status" aria-live="polite">
+        <div class="loading-card">
+          <h1>Singularity</h1>
+          <p>Booting deep space simulation...</p>
+          <div class="loading-bar" aria-hidden="true">
+            <span id="loading-fill"></span>
+          </div>
+          <p id="loading-text">0%</p>
+        </div>
+      </div>
+
+      <div id="webgl-error" hidden>
+        <div class="error-card">
+          <h2>WebGL unavailable</h2>
+          <p>Your browser or device cannot run this experience. Try a modern browser with hardware acceleration.</p>
+        </div>
+      </div>
+
+      <header id="ui-panel">
+        <div class="title-wrap">
+          <h1>Singularity</h1>
+          <p>A cinematic procedural galaxy with an active black hole core.</p>
+        </div>
+        <div class="button-row" role="group" aria-label="Simulation controls">
+          <button id="toggle-sim" aria-label="Start or pause simulation">Pause</button>
+          <button id="reset-camera" aria-label="Reset camera">Reset Camera</button>
+          <button id="toggle-fullscreen" aria-label="Toggle fullscreen">Fullscreen</button>
+          <button id="toggle-ui" aria-label="Show or hide interface">Hide UI</button>
+          <button id="toggle-gui" aria-label="Show or hide configuration panel">Config</button>
+        </div>
+        <p class="hint">Mouse drag: orbit · Wheel: zoom · Space: pause · R: reset · F: fullscreen · H: UI · G: config</p>
+      </header>
+
+      <button id="show-ui-floating" aria-label="Show interface" hidden>Show UI</button>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
