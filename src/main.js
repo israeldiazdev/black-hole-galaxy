@@ -2,7 +2,7 @@ import './styles.css';
 
 import * as THREE from 'three';
 import { applyQualityToConfig, defaultConfig, QUALITY_PRESETS } from './config.js';
-import { createScene, isWebGLAvailable } from './scene/createScene.js';
+import { createScene } from './scene/createScene.js';
 import { createGalaxy } from './scene/createGalaxy.js';
 import { createBlackHole } from './scene/createBlackHole.js';
 import { createStarField } from './scene/createStarField.js';
@@ -45,10 +45,6 @@ function showWebGLError(details = '') {
       paragraph.textContent = `Your browser or device cannot run this experience. ${details}`;
     }
   }
-}
-
-if (!isWebGLAvailable()) {
-  showWebGLError('Try enabling hardware acceleration and WebGL in browser settings.');
 }
 
 let qualityPreset = applyQualityToConfig(config);
@@ -259,15 +255,14 @@ function animate() {
 }
 
 async function init() {
-  if (!isWebGLAvailable()) {
-    return;
-  }
-
   updateLoading(12, 'Renderer');
   try {
     sceneContext = createScene(canvas, config, qualityPreset.maxPixelRatio);
-  } catch {
-    showWebGLError('Renderer initialization failed. Try a different browser or disable strict privacy GPU blocks.');
+  } catch (err) {
+    const hint = err?.message?.includes('context') 
+      ? 'Enable hardware acceleration in browser settings.' 
+      : String(err?.message || '');
+    showWebGLError(hint || 'Renderer initialization failed.');
     return;
   }
 

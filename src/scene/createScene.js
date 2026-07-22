@@ -1,18 +1,5 @@
 import * as THREE from 'three';
 
-export function isWebGLAvailable() {
-  try {
-    const canvas = document.createElement('canvas');
-    const context =
-      canvas.getContext('webgl2') ||
-      canvas.getContext('webgl') ||
-      canvas.getContext('experimental-webgl');
-    return Boolean(context);
-  } catch {
-    return false;
-  }
-}
-
 export function createScene(canvas, config, maxPixelRatio) {
   const scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(config.backgroundColor, 0.018);
@@ -20,26 +7,24 @@ export function createScene(canvas, config, maxPixelRatio) {
   const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 260);
   camera.position.set(0, 14, 70);
 
-  const rendererOptions = [
-    { antialias: true, alpha: false, powerPreference: 'high-performance' },
-    { antialias: false, alpha: false, powerPreference: 'default' },
-    { antialias: false, alpha: false }
-  ];
-
-  let renderer = null;
-  let lastError = null;
-
-  for (const options of rendererOptions) {
-    try {
-      renderer = new THREE.WebGLRenderer({ canvas, ...options });
-      break;
-    } catch (error) {
-      lastError = error;
-    }
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: false,
+      powerPreference: 'high-performance'
+    });
+  } catch {
+    // Retry without antialias as fallback
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
   }
 
-  if (!renderer) {
-    throw lastError || new Error('WebGL renderer initialization failed');
+  // Verify the GL context is actually usable
+  const gl = renderer.getContext();
+  if (!gl) {
+    renderer.dispose();
+    throw new Error('WebGL context could not be acquired');
   }
 
   renderer.setClearColor(config.backgroundColor, 1);
