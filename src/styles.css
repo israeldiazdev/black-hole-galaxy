@@ -164,6 +164,21 @@ button:focus-visible {
   font-size: 0.77rem;
 }
 
+.error-card .error-tips {
+  margin: 0.65rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.7;
+}
+
+.error-card .error-tips code {
+  background: rgba(255,255,255,0.1);
+  padding: 0.05em 0.3em;
+  border-radius: 4px;
+  font-size: 0.82em;
+}
+
 .loading-hidden {
   animation: fade-out 0.55s ease forwards;
 }

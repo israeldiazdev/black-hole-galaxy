@@ -24,8 +24,14 @@
 
       <div id="webgl-error" hidden>
         <div class="error-card">
-          <h2>WebGL unavailable</h2>
-          <p>Your browser or device cannot run this experience. Try a modern browser with hardware acceleration.</p>
+          <h2>WebGL not available</h2>
+          <p id="webgl-error-msg">This experience requires WebGL. Your browser may have it disabled.</p>
+          <ul class="error-tips">
+            <li><strong>Brave:</strong> click the Lion icon → lower Shields or allow fingerprinting for this site.</li>
+            <li><strong>Firefox:</strong> type <code>about:config</code> → set <code>webgl.disabled</code> to <em>false</em>.</li>
+            <li><strong>Any browser:</strong> enable Hardware Acceleration in Settings → Advanced.</li>
+          </ul>
+          <button id="retry-webgl" style="margin-top:.8rem">Retry</button>
         </div>
       </div>
 

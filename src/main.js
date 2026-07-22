@@ -39,11 +39,17 @@ const showUiFloatingButton = document.querySelector('#show-ui-floating');
 function showWebGLError(details = '') {
   loadingScreen.hidden = true;
   webglError.hidden = false;
-  if (details) {
-    const paragraph = webglError.querySelector('p');
-    if (paragraph) {
-      paragraph.textContent = `Your browser or device cannot run this experience. ${details}`;
-    }
+  const msgEl = webglError.querySelector('#webgl-error-msg');
+  if (msgEl && details) {
+    msgEl.textContent = details;
+  }
+  const retryBtn = document.querySelector('#retry-webgl');
+  if (retryBtn) {
+    retryBtn.addEventListener('click', () => {
+      webglError.hidden = true;
+      loadingScreen.hidden = false;
+      init();
+    }, { once: true });
   }
 }
 
@@ -259,10 +265,11 @@ async function init() {
   try {
     sceneContext = createScene(canvas, config, qualityPreset.maxPixelRatio);
   } catch (err) {
-    const hint = err?.message?.includes('context') 
-      ? 'Enable hardware acceleration in browser settings.' 
-      : String(err?.message || '');
-    showWebGLError(hint || 'Renderer initialization failed.');
+    const isUnavailable = err?.message === 'WEBGL_UNAVAILABLE';
+    const hint = isUnavailable
+      ? 'WebGL context could not be created. See the tips below.'
+      : `Renderer error: ${err?.message || 'unknown'}. See the tips below.`;
+    showWebGLError(hint);
     return;
   }
 
