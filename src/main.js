@@ -36,9 +36,19 @@ const toggleUiButton = document.querySelector('#toggle-ui');
 const toggleGuiButton = document.querySelector('#toggle-gui');
 const showUiFloatingButton = document.querySelector('#show-ui-floating');
 
-if (!isWebGLAvailable()) {
+function showWebGLError(details = '') {
   loadingScreen.hidden = true;
   webglError.hidden = false;
+  if (details) {
+    const paragraph = webglError.querySelector('p');
+    if (paragraph) {
+      paragraph.textContent = `Your browser or device cannot run this experience. ${details}`;
+    }
+  }
+}
+
+if (!isWebGLAvailable()) {
+  showWebGLError('Try enabling hardware acceleration and WebGL in browser settings.');
 }
 
 let qualityPreset = applyQualityToConfig(config);
@@ -254,7 +264,12 @@ async function init() {
   }
 
   updateLoading(12, 'Renderer');
-  sceneContext = createScene(canvas, config, qualityPreset.maxPixelRatio);
+  try {
+    sceneContext = createScene(canvas, config, qualityPreset.maxPixelRatio);
+  } catch {
+    showWebGLError('Renderer initialization failed. Try a different browser or disable strict privacy GPU blocks.');
+    return;
+  }
 
   updateLoading(36, 'Galaxy system');
   await new Promise((resolve) => requestAnimationFrame(resolve));

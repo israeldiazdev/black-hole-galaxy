@@ -3,10 +3,11 @@ import * as THREE from 'three';
 export function isWebGLAvailable() {
   try {
     const canvas = document.createElement('canvas');
-    return Boolean(
-      window.WebGLRenderingContext &&
-        (canvas.getContext('webgl2') || canvas.getContext('webgl'))
-    );
+    const context =
+      canvas.getContext('webgl2') ||
+      canvas.getContext('webgl') ||
+      canvas.getContext('experimental-webgl');
+    return Boolean(context);
   } catch {
     return false;
   }
@@ -19,12 +20,27 @@ export function createScene(canvas, config, maxPixelRatio) {
   const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 260);
   camera.position.set(0, 14, 70);
 
-  const renderer = new THREE.WebGLRenderer({
-    canvas,
-    antialias: true,
-    alpha: false,
-    powerPreference: 'high-performance'
-  });
+  const rendererOptions = [
+    { antialias: true, alpha: false, powerPreference: 'high-performance' },
+    { antialias: false, alpha: false, powerPreference: 'default' },
+    { antialias: false, alpha: false }
+  ];
+
+  let renderer = null;
+  let lastError = null;
+
+  for (const options of rendererOptions) {
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, ...options });
+      break;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (!renderer) {
+    throw lastError || new Error('WebGL renderer initialization failed');
+  }
 
   renderer.setClearColor(config.backgroundColor, 1);
   renderer.setSize(window.innerWidth, window.innerHeight);
