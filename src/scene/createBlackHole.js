@@ -246,10 +246,10 @@ export function createBlackHole(root, config, qualityPreset) {
   const signatureAnchor = {
     angle: 1.02,
     speed: 0.62,
-    radiusScale: 5.2,
-    vertical: 0.06,
-    xScale: 1.1,
-    yScale: 1.2
+    radiusScale: 9.5,
+    vertical: 0.08,
+    xScale: 2.2,
+    yScale: 2.4
   };
 
   const jetCount = 360;
