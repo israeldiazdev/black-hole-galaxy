@@ -46,6 +46,11 @@ body,
   background: rgba(0, 0, 0, 0.7);
 }
 
+#loading-screen[hidden],
+#webgl-error[hidden] {
+  display: none !important;
+}
+
 .loading-card,
 .error-card {
   width: min(90vw, 420px);

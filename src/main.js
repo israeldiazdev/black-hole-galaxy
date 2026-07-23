@@ -284,6 +284,8 @@ function animate() {
 
 async function init() {
   try {
+    webglError.hidden = true;
+
     updateLoading(12, 'Renderer');
     sceneContext = createScene(canvas, config, qualityPreset.maxPixelRatio);
 
@@ -299,6 +301,7 @@ async function init() {
     bindUiEvents();
 
     updateLoading(100, 'Ready');
+    webglError.hidden = true;
     hideLoading();
     animate();
   } catch (err) {
