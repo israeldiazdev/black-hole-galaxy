@@ -141,19 +141,16 @@ export function createBlackHole(root, config, qualityPreset) {
     [[0.0, 0.0], [0.35, 1.0], [0.7, 0.0]],
     [[0.18, 0.45], [0.52, 0.45]],
 
-    [[1.2, 0.0], [1.2, 1.0], [1.8, 1.0], [1.8, 0.55], [1.2, 0.55], [1.85, 0.0]],
+    [[1.25, 0.0], [1.25, 1.0], [1.85, 1.0], [1.25, 0.5], [1.8, 0.0]],
 
-    [[2.4, 1.0], [2.4, 0.0], [3.0, 0.0]],
+    [[2.35, 1.0], [2.35, 0.0], [2.95, 0.0]],
 
-    [[3.4, 1.0], [3.4, 0.0], [4.05, 0.0]],
-    [[3.4, 1.0], [4.05, 1.0]],
-    [[3.4, 0.5], [3.95, 0.5]],
+    [[3.35, 1.0], [3.35, 0.0], [4.0, 0.0]],
+    [[3.35, 1.0], [4.0, 1.0]],
 
     [[4.45, 0.0], [4.45, 1.0], [5.15, 0.0], [5.15, 1.0]],
 
-    [[5.55, 1.0], [6.25, 1.0]],
-    [[5.9, 1.0], [5.9, 0.0]],
-    [[5.55, 0.0], [6.25, 0.0]]
+    [[5.55, 1.0], [6.25, 1.0], [5.9, 1.0], [5.9, 0.0], [6.25, 0.0]]
   ];
 
   const signatureLocalPoints = [];
@@ -188,7 +185,7 @@ export function createBlackHole(root, config, qualityPreset) {
   signatureGeometry.setAttribute('color', new THREE.BufferAttribute(signatureColors, 3));
 
   const signatureMaterial = new THREE.PointsMaterial({
-    size: 0.14,
+    size: 0.165,
     sizeAttenuation: true,
     transparent: true,
     opacity: 1,
@@ -203,10 +200,10 @@ export function createBlackHole(root, config, qualityPreset) {
   const signatureGlow = new THREE.Points(
     signatureGeometry,
     new THREE.PointsMaterial({
-      size: 0.28,
+      size: 0.36,
       sizeAttenuation: true,
       transparent: true,
-      opacity: 0.3,
+      opacity: 0.32,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
       vertexColors: true
@@ -230,12 +227,12 @@ export function createBlackHole(root, config, qualityPreset) {
   group.add(signatureLines);
 
   const signatureAnchor = {
-    angle: 1.08,
-    speed: 0.66,
-    radiusScale: 2.85,
+    angle: 1.02,
+    speed: 0.62,
+    radiusScale: 3.45,
     vertical: 0.04,
-    xScale: 0.54,
-    yScale: 0.54
+    xScale: 0.56,
+    yScale: 0.56
   };
 
   const jetCount = 360;
