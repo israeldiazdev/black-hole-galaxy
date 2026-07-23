@@ -137,18 +137,31 @@ export function createBlackHole(root, config, qualityPreset) {
   const streams = new THREE.Points(streamGeometry, streamMaterial);
   group.add(streams);
 
-  const signatureGlyph = [
-    [0.0, 0.0], [0.26, 0.68], [0.52, 0.0], [0.26, 0.34],
-    [0.78, 0.0], [0.78, 0.78], [1.2, 0.78], [1.2, 0.34], [1.42, 0.0],
-    [1.66, 0.0], [1.66, 0.78], [2.02, 0.0],
-    [2.24, 0.0], [2.24, 0.78], [2.66, 0.78], [2.66, 0.38], [2.66, 0.0],
-    [2.96, 0.0], [2.96, 0.78], [3.36, 0.0], [3.36, 0.78],
-    [3.62, 0.0], [3.62, 0.78]
+  const signatureStrokeDefs = [
+    [[0.0, 0.0], [0.32, 1.0]], [[0.32, 1.0], [0.64, 0.0]], [[0.16, 0.5], [0.48, 0.5]],
+    [[0.95, 0.0], [0.95, 1.0]], [[0.95, 1.0], [1.5, 1.0]], [[0.95, 0.5], [1.37, 0.5]], [[0.95, 0.0], [1.55, 0.0]],
+    [[1.82, 1.0], [1.82, 0.0]], [[1.82, 0.0], [2.45, 0.0]],
+    [[2.72, 0.0], [2.72, 1.0]], [[2.72, 1.0], [3.34, 1.0]], [[2.72, 0.5], [3.2, 0.5]], [[2.72, 0.0], [3.34, 0.0]],
+    [[3.6, 0.0], [3.6, 1.0]], [[3.6, 1.0], [4.15, 0.0]], [[4.15, 0.0], [4.15, 1.0]],
+    [[4.44, 1.0], [4.44, 0.0]], [[4.44, 1.0], [5.02, 1.0]]
   ];
+
+  const signatureGlyph = [];
+  const signatureStep = 0.11;
+  signatureStrokeDefs.forEach(([from, to]) => {
+    const dx = to[0] - from[0];
+    const dy = to[1] - from[1];
+    const length = Math.hypot(dx, dy);
+    const steps = Math.max(2, Math.ceil(length / signatureStep));
+    for (let i = 0; i <= steps; i += 1) {
+      const t = i / steps;
+      signatureGlyph.push([from[0] + dx * t, from[1] + dy * t]);
+    }
+  });
 
   const signaturePositions = new Float32Array(signatureGlyph.length * 3);
   const signatureColors = new Float32Array(signatureGlyph.length * 3);
-  const signatureColor = new THREE.Color('#ffd2f3');
+  const signatureColor = new THREE.Color('#f7f0ff');
   for (let i = 0; i < signatureGlyph.length; i += 1) {
     const i3 = i * 3;
     signatureColors[i3 + 0] = signatureColor.r;
@@ -161,10 +174,10 @@ export function createBlackHole(root, config, qualityPreset) {
   signatureGeometry.setAttribute('color', new THREE.BufferAttribute(signatureColors, 3));
 
   const signatureMaterial = new THREE.PointsMaterial({
-    size: 0.09,
+    size: 0.13,
     sizeAttenuation: true,
     transparent: true,
-    opacity: 0.96,
+    opacity: 0.98,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
     vertexColors: true
@@ -173,11 +186,27 @@ export function createBlackHole(root, config, qualityPreset) {
   const signaturePoints = new THREE.Points(signatureGeometry, signatureMaterial);
   group.add(signaturePoints);
 
+  const signatureHalo = new THREE.Points(
+    signatureGeometry,
+    new THREE.PointsMaterial({
+      size: 0.24,
+      sizeAttenuation: true,
+      transparent: true,
+      opacity: 0.26,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      vertexColors: true
+    })
+  );
+  group.add(signatureHalo);
+
   const signatureAnchor = {
-    angle: 1.35,
-    speed: 1.05,
-    radiusScale: 2.75,
-    vertical: 0.16
+    angle: 1.18,
+    speed: 0.85,
+    radiusScale: 2.15,
+    vertical: 0.34,
+    xScale: 0.5,
+    yScale: 0.48
   };
 
   const jetCount = 360;
@@ -242,28 +271,31 @@ export function createBlackHole(root, config, qualityPreset) {
 
   function updateSignature(elapsed, delta) {
     const positions = signaturePoints.geometry.attributes.position.array;
-    const glyphCenterX = 1.8;
-    const angleSpread = 0.06;
-    const radialSpread = 0.2;
-    const verticalScale = 0.32;
     const baseRadius = config.eventHorizonRadius * signatureAnchor.radiusScale;
+    const glyphCenterX = 2.5;
+    const glyphCenterY = 0.5;
+    const radial = new THREE.Vector3(Math.cos(signatureAnchor.angle), 0, Math.sin(signatureAnchor.angle));
+    const tangent = new THREE.Vector3(-Math.sin(signatureAnchor.angle), 0, Math.cos(signatureAnchor.angle));
+    const center = radial.clone().multiplyScalar(baseRadius);
+    center.y = signatureAnchor.vertical;
 
     signatureAnchor.angle += delta * signatureAnchor.speed * (2.2 / Math.max(0.8, baseRadius));
 
     for (let i = 0; i < signatureGlyph.length; i += 1) {
       const i3 = i * 3;
       const [gx, gy] = signatureGlyph[i];
-      const offsetX = gx - glyphCenterX;
-      const orbitAngle = signatureAnchor.angle + offsetX * angleSpread;
-      const orbitRadius = baseRadius + offsetX * radialSpread;
+      const localX = (gx - glyphCenterX) * signatureAnchor.xScale;
+      const localY = (gy - glyphCenterY) * signatureAnchor.yScale;
+      const wobble = Math.sin(elapsed * 1.8 + i * 0.11) * 0.01;
 
-      positions[i3 + 0] = Math.cos(orbitAngle) * orbitRadius;
-      positions[i3 + 1] = signatureAnchor.vertical + (gy - 0.38) * verticalScale + Math.sin(elapsed * 1.8 + i * 0.35) * 0.008;
-      positions[i3 + 2] = Math.sin(orbitAngle) * orbitRadius;
+      positions[i3 + 0] = center.x + tangent.x * localX + radial.x * wobble;
+      positions[i3 + 1] = center.y + localY;
+      positions[i3 + 2] = center.z + tangent.z * localX + radial.z * wobble;
     }
 
     signaturePoints.geometry.attributes.position.needsUpdate = true;
-    signaturePoints.material.opacity = 0.82 + Math.sin(elapsed * 2.2) * 0.12;
+    signaturePoints.material.opacity = 0.84 + Math.sin(elapsed * 2.1) * 0.14;
+    signatureHalo.material.opacity = 0.18 + Math.sin(elapsed * 2.1) * 0.08;
   }
 
   function update(delta, elapsed) {
