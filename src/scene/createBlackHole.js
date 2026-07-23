@@ -180,6 +180,9 @@ export function createBlackHole(root, config, qualityPreset) {
     signatureColors[i3 + 2] = signatureColor.b;
   }
 
+  const signatureTwinklePhase = signatureLocalPoints.map(() => Math.random() * Math.PI * 2);
+  const signatureTwinklePower = signatureLocalPoints.map(() => 0.55 + Math.random() * 0.45);
+
   const signatureGeometry = new THREE.BufferGeometry();
   signatureGeometry.setAttribute('position', new THREE.BufferAttribute(signaturePositions, 3));
   signatureGeometry.setAttribute('color', new THREE.BufferAttribute(signatureColors, 3));
@@ -228,11 +231,11 @@ export function createBlackHole(root, config, qualityPreset) {
 
   const signatureAnchor = {
     angle: 1.08,
-    speed: 0.72,
-    radiusScale: 2.2,
-    vertical: 0.26,
-    xScale: 0.56,
-    yScale: 0.56
+    speed: 0.66,
+    radiusScale: 2.85,
+    vertical: 0.04,
+    xScale: 0.54,
+    yScale: 0.54
   };
 
   const jetCount = 360;
@@ -297,6 +300,7 @@ export function createBlackHole(root, config, qualityPreset) {
 
   function updateSignature(elapsed, delta) {
     const positions = signaturePoints.geometry.attributes.position.array;
+    const colors = signaturePoints.geometry.attributes.color.array;
     const linePositions = signatureLines.geometry.attributes.position.array;
     const baseRadius = config.eventHorizonRadius * signatureAnchor.radiusScale;
     const glyphCenterX = 3.12;
@@ -312,12 +316,18 @@ export function createBlackHole(root, config, qualityPreset) {
       const i3 = i * 3;
       const [gx, gy] = signatureLocalPoints[i];
       const localX = (gx - glyphCenterX) * signatureAnchor.xScale;
-      const localY = (gy - glyphCenterY) * signatureAnchor.yScale;
-      const wobble = Math.sin(elapsed * 1.8 + i * 0.09) * 0.008;
+      const localZ = (gy - glyphCenterY) * signatureAnchor.yScale;
+      const wobble = Math.sin(elapsed * 1.9 + i * 0.11) * 0.01;
 
-      positions[i3 + 0] = center.x + tangent.x * localX + radial.x * wobble;
-      positions[i3 + 1] = center.y + localY;
-      positions[i3 + 2] = center.z + tangent.z * localX + radial.z * wobble;
+      positions[i3 + 0] = center.x + tangent.x * localX + radial.x * (localZ + wobble);
+      positions[i3 + 1] = center.y + Math.sin(elapsed * 1.4 + i * 0.2) * 0.008;
+      positions[i3 + 2] = center.z + tangent.z * localX + radial.z * (localZ + wobble);
+
+      const twinkle = 0.65 + Math.sin(elapsed * (2.0 + signatureTwinklePower[i]) + signatureTwinklePhase[i]) * 0.35;
+      const brightness = 0.7 + twinkle * 0.5;
+      colors[i3 + 0] = signatureColor.r * brightness;
+      colors[i3 + 1] = signatureColor.g * brightness;
+      colors[i3 + 2] = signatureColor.b * brightness;
     }
 
     for (let i = 0; i < signatureEdges.length; i += 1) {
@@ -335,6 +345,7 @@ export function createBlackHole(root, config, qualityPreset) {
     }
 
     signaturePoints.geometry.attributes.position.needsUpdate = true;
+    signaturePoints.geometry.attributes.color.needsUpdate = true;
     signatureGlow.geometry.attributes.position.needsUpdate = true;
     signatureLines.geometry.attributes.position.needsUpdate = true;
     signaturePoints.material.opacity = 0.84 + Math.sin(elapsed * 2.1) * 0.14;
