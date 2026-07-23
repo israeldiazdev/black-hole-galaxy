@@ -47,8 +47,64 @@ export function createStarField(root, qualityPreset) {
 
   group.add(stars);
 
+  const constellationGroup = new THREE.Group();
+  constellationGroup.position.set(36, 18, -44);
+  constellationGroup.rotation.set(0.45, 0.35, -0.15);
+  group.add(constellationGroup);
+
+  const lineColor = new THREE.Color('#8ad7ff');
+  const starColor = new THREE.Color('#ff83d8');
+
+  const letterDefs = [
+    { points: [[0, 0, 0], [0.6, 1.05, 0], [1.2, 0, 0], [0.6, 0.5, 0]] },
+    { points: [[1.8, 0, 0], [1.8, 1.2, 0], [2.4, 1.2, 0], [2.4, 0.5, 0], [2.9, 0, 0]] },
+    { points: [[3.4, 0, 0], [3.4, 1.2, 0], [4.25, 0, 0]] },
+    { points: [[4.8, 0, 0], [4.8, 1.2, 0], [5.55, 1.2, 0], [5.55, 0.58, 0], [5.55, 0, 0]] },
+    { points: [[6.2, 0, 0], [6.2, 1.2, 0], [7.0, 0, 0], [7.0, 1.2, 0]] },
+    { points: [[7.6, 0, 0], [7.6, 1.2, 0]] }
+  ];
+
+  letterDefs.forEach((letter) => {
+    const linePositions = [];
+    const starPositions = [];
+
+    letter.points.forEach((point) => {
+      linePositions.push(point[0], point[1], point[2]);
+      starPositions.push(point[0], point[1], point[2]);
+    });
+
+    const lineGeometry = new THREE.BufferGeometry();
+    lineGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(linePositions), 3));
+    const line = new THREE.Line(
+      lineGeometry,
+      new THREE.LineBasicMaterial({
+        color: lineColor,
+        transparent: true,
+        opacity: 0.18,
+        depthWrite: false
+      })
+    );
+    constellationGroup.add(line);
+
+    const starsGeometry = new THREE.BufferGeometry();
+    starsGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(starPositions), 3));
+    const glyphStars = new THREE.Points(
+      starsGeometry,
+      new THREE.PointsMaterial({
+        size: 0.16,
+        color: starColor,
+        transparent: true,
+        opacity: 0.52,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      })
+    );
+    constellationGroup.add(glyphStars);
+  });
+
   function update(delta) {
     group.rotation.y += delta * 0.004;
+    constellationGroup.rotation.y += delta * 0.002;
   }
 
   return {
