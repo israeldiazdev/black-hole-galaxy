@@ -137,121 +137,6 @@ export function createBlackHole(root, config, qualityPreset) {
   const streams = new THREE.Points(streamGeometry, streamMaterial);
   group.add(streams);
 
-  const signatureSegments = [
-    [[0.5, 0.8], [1.2, 2.8], [2.0, 0.5]],
-    [[0.8, 1.5], [1.8, 1.5]],
-
-    [[5.5, -0.5], [5.5, 2.8], [7.8, 2.8], [7.8, 1.2], [5.5, 1.2]],
-    [[5.5, 1.2], [8.5, -1.0]],
-
-    [[10.0, -1.0], [10.0, 2.2], [11.8, 2.2]],
-
-    [[14.5, 0.5], [14.5, 3.2]],
-    [[14.5, 3.2], [16.8, 2.8]],
-    [[14.5, 1.8], [16.2, 1.5]],
-    [[14.5, 0.5], [16.8, 0.5]],
-
-    [[2.2, 4.5], [2.2, 7.2]],
-    [[2.2, 7.2], [4.8, 4.2]],
-    [[4.8, 4.2], [4.8, 7.0]],
-
-    [[8.5, 5.8], [11.2, 6.2]],
-    [[9.8, 5.8], [9.8, 8.5]],
-    [[8.5, 8.5], [11.0, 8.5]]
-  ];
-
-  const signatureLocalPoints = [];
-  const signatureEdges = [];
-  signatureSegments.forEach((segment) => {
-    let previousIndex = -1;
-    segment.forEach((point) => {
-      signatureLocalPoints.push([point[0], point[1]]);
-      const idx = signatureLocalPoints.length - 1;
-      if (previousIndex >= 0) {
-        signatureEdges.push([previousIndex, idx]);
-      }
-      previousIndex = idx;
-    });
-  });
-
-  const signatureBounds = signatureLocalPoints.reduce((acc, [x, y]) => {
-    acc.minX = Math.min(acc.minX, x);
-    acc.maxX = Math.max(acc.maxX, x);
-    acc.minY = Math.min(acc.minY, y);
-    acc.maxY = Math.max(acc.maxY, y);
-    return acc;
-  }, { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
-  const glyphCenterX = (signatureBounds.minX + signatureBounds.maxX) * 0.5;
-  const glyphCenterY = (signatureBounds.minY + signatureBounds.maxY) * 0.5;
-
-  const signaturePositions = new Float32Array(signatureLocalPoints.length * 3);
-  const signatureColors = new Float32Array(signatureLocalPoints.length * 3);
-  const signatureColor = new THREE.Color('#f6fbff');
-  for (let i = 0; i < signatureLocalPoints.length; i += 1) {
-    const i3 = i * 3;
-    signatureColors[i3 + 0] = signatureColor.r;
-    signatureColors[i3 + 1] = signatureColor.g;
-    signatureColors[i3 + 2] = signatureColor.b;
-  }
-
-  const signatureTwinklePhase = signatureLocalPoints.map(() => Math.random() * Math.PI * 2);
-  const signatureTwinklePower = signatureLocalPoints.map(() => 0.55 + Math.random() * 0.45);
-
-  const signatureGeometry = new THREE.BufferGeometry();
-  signatureGeometry.setAttribute('position', new THREE.BufferAttribute(signaturePositions, 3));
-  signatureGeometry.setAttribute('color', new THREE.BufferAttribute(signatureColors, 3));
-
-  const signatureMaterial = new THREE.PointsMaterial({
-    size: 0.165,
-    sizeAttenuation: true,
-    transparent: true,
-    opacity: 1,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    vertexColors: true
-  });
-
-  const signaturePoints = new THREE.Points(signatureGeometry, signatureMaterial);
-  group.add(signaturePoints);
-
-  const signatureGlow = new THREE.Points(
-    signatureGeometry,
-    new THREE.PointsMaterial({
-      size: 0.36,
-      sizeAttenuation: true,
-      transparent: true,
-      opacity: 0.32,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      vertexColors: true
-    })
-  );
-  group.add(signatureGlow);
-
-  const signatureLinePositions = new Float32Array(signatureEdges.length * 2 * 3);
-  const signatureLineGeometry = new THREE.BufferGeometry();
-  signatureLineGeometry.setAttribute('position', new THREE.BufferAttribute(signatureLinePositions, 3));
-  const signatureLines = new THREE.LineSegments(
-    signatureLineGeometry,
-    new THREE.LineBasicMaterial({
-      color: new THREE.Color('#d8ecff'),
-      transparent: true,
-      opacity: 0.72,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending
-    })
-  );
-  group.add(signatureLines);
-
-  const signatureAnchor = {
-    angle: 1.02,
-    speed: 0.62,
-    radiusScale: 9.5,
-    vertical: 0.08,
-    xScale: 2.2,
-    yScale: 2.4
-  };
-
   const jetCount = 360;
   const jetPositions = new Float32Array(jetCount * 3);
   const jetColors = new Float32Array(jetCount * 3);
@@ -312,59 +197,6 @@ export function createBlackHole(root, config, qualityPreset) {
     particle.infallVelocity = 0.015 + Math.random() * 0.035;
   }
 
-  function updateSignature(elapsed, delta) {
-    const positions = signaturePoints.geometry.attributes.position.array;
-    const colors = signaturePoints.geometry.attributes.color.array;
-    const linePositions = signatureLines.geometry.attributes.position.array;
-    const baseRadius = config.eventHorizonRadius * signatureAnchor.radiusScale;
-
-    signatureAnchor.angle += delta * signatureAnchor.speed * (2.2 / Math.max(0.8, baseRadius));
-    const radial = new THREE.Vector3(Math.cos(signatureAnchor.angle), 0, Math.sin(signatureAnchor.angle));
-    const tangent = new THREE.Vector3(-Math.sin(signatureAnchor.angle), 0, Math.cos(signatureAnchor.angle));
-    const center = radial.clone().multiplyScalar(baseRadius);
-    center.y = signatureAnchor.vertical;
-
-    for (let i = 0; i < signatureLocalPoints.length; i += 1) {
-      const i3 = i * 3;
-      const [gx, gy] = signatureLocalPoints[i];
-      const localX = (gx - glyphCenterX) * signatureAnchor.xScale;
-      const localZ = (gy - glyphCenterY) * signatureAnchor.yScale;
-      const wobble = Math.sin(elapsed * 1.9 + i * 0.11) * 0.01;
-
-      positions[i3 + 0] = center.x + tangent.x * localX + radial.x * (localZ + wobble);
-      positions[i3 + 1] = center.y + Math.sin(elapsed * 1.4 + i * 0.2) * 0.008;
-      positions[i3 + 2] = center.z + tangent.z * localX + radial.z * (localZ + wobble);
-
-      const twinkle = 0.65 + Math.sin(elapsed * (2.0 + signatureTwinklePower[i]) + signatureTwinklePhase[i]) * 0.35;
-      const brightness = 0.7 + twinkle * 0.5;
-      colors[i3 + 0] = signatureColor.r * brightness;
-      colors[i3 + 1] = signatureColor.g * brightness;
-      colors[i3 + 2] = signatureColor.b * brightness;
-    }
-
-    for (let i = 0; i < signatureEdges.length; i += 1) {
-      const [a, b] = signatureEdges[i];
-      const a3 = a * 3;
-      const b3 = b * 3;
-      const i6 = i * 6;
-
-      linePositions[i6 + 0] = positions[a3 + 0];
-      linePositions[i6 + 1] = positions[a3 + 1];
-      linePositions[i6 + 2] = positions[a3 + 2];
-      linePositions[i6 + 3] = positions[b3 + 0];
-      linePositions[i6 + 4] = positions[b3 + 1];
-      linePositions[i6 + 5] = positions[b3 + 2];
-    }
-
-    signaturePoints.geometry.attributes.position.needsUpdate = true;
-    signaturePoints.geometry.attributes.color.needsUpdate = true;
-    signatureGlow.geometry.attributes.position.needsUpdate = true;
-    signatureLines.geometry.attributes.position.needsUpdate = true;
-    signaturePoints.material.opacity = 0.84 + Math.sin(elapsed * 2.1) * 0.14;
-    signatureGlow.material.opacity = 0.24 + Math.sin(elapsed * 2.1) * 0.08;
-    signatureLines.material.opacity = 0.64 + Math.sin(elapsed * 2.1) * 0.12;
-  }
-
   function update(delta, elapsed) {
     disk.rotation.z += delta * 0.24;
     disk.material.uniforms.uTime.value = elapsed;
@@ -400,8 +232,6 @@ export function createBlackHole(root, config, qualityPreset) {
     }
 
     streams.geometry.attributes.position.needsUpdate = true;
-
-    updateSignature(elapsed, delta);
 
     jets.visible = config.showJets;
     jets.rotation.y += delta * 0.3;
