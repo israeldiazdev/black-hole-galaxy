@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import galaxyVertexShader from '../shaders/galaxyVertex.glsl';
-import galaxyFragmentShader from '../shaders/galaxyFragment.glsl';
+import galaxyVertexShader from '../shaders/galaxyVertex.glsl?raw';
+import galaxyFragmentShader from '../shaders/galaxyFragment.glsl?raw';
 import { disposeObject3D, safeRemove } from '../utils/dispose.js';
 
 function mulberry32(seed) {

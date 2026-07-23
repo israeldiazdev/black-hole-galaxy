@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import accretionVertexShader from '../shaders/accretionVertex.glsl';
-import accretionFragmentShader from '../shaders/accretionFragment.glsl';
+import accretionVertexShader from '../shaders/accretionVertex.glsl?raw';
+import accretionFragmentShader from '../shaders/accretionFragment.glsl?raw';
 import { disposeObject3D, safeRemove } from '../utils/dispose.js';
 
 function createGradientTexture() {
