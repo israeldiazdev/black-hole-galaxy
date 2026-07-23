@@ -137,6 +137,49 @@ export function createBlackHole(root, config, qualityPreset) {
   const streams = new THREE.Points(streamGeometry, streamMaterial);
   group.add(streams);
 
+  const signatureGlyph = [
+    [0.0, 0.0], [0.26, 0.68], [0.52, 0.0], [0.26, 0.34],
+    [0.78, 0.0], [0.78, 0.78], [1.2, 0.78], [1.2, 0.34], [1.42, 0.0],
+    [1.66, 0.0], [1.66, 0.78], [2.02, 0.0],
+    [2.24, 0.0], [2.24, 0.78], [2.66, 0.78], [2.66, 0.38], [2.66, 0.0],
+    [2.96, 0.0], [2.96, 0.78], [3.36, 0.0], [3.36, 0.78],
+    [3.62, 0.0], [3.62, 0.78]
+  ];
+
+  const signaturePositions = new Float32Array(signatureGlyph.length * 3);
+  const signatureColors = new Float32Array(signatureGlyph.length * 3);
+  const signatureColor = new THREE.Color('#ffd2f3');
+  for (let i = 0; i < signatureGlyph.length; i += 1) {
+    const i3 = i * 3;
+    signatureColors[i3 + 0] = signatureColor.r;
+    signatureColors[i3 + 1] = signatureColor.g;
+    signatureColors[i3 + 2] = signatureColor.b;
+  }
+
+  const signatureGeometry = new THREE.BufferGeometry();
+  signatureGeometry.setAttribute('position', new THREE.BufferAttribute(signaturePositions, 3));
+  signatureGeometry.setAttribute('color', new THREE.BufferAttribute(signatureColors, 3));
+
+  const signatureMaterial = new THREE.PointsMaterial({
+    size: 0.09,
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: 0.96,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    vertexColors: true
+  });
+
+  const signaturePoints = new THREE.Points(signatureGeometry, signatureMaterial);
+  group.add(signaturePoints);
+
+  const signatureAnchor = {
+    angle: 1.35,
+    speed: 1.05,
+    radiusScale: 2.75,
+    vertical: 0.16
+  };
+
   const jetCount = 360;
   const jetPositions = new Float32Array(jetCount * 3);
   const jetColors = new Float32Array(jetCount * 3);
@@ -197,6 +240,32 @@ export function createBlackHole(root, config, qualityPreset) {
     particle.infallVelocity = 0.015 + Math.random() * 0.035;
   }
 
+  function updateSignature(elapsed, delta) {
+    const positions = signaturePoints.geometry.attributes.position.array;
+    const glyphCenterX = 1.8;
+    const angleSpread = 0.06;
+    const radialSpread = 0.2;
+    const verticalScale = 0.32;
+    const baseRadius = config.eventHorizonRadius * signatureAnchor.radiusScale;
+
+    signatureAnchor.angle += delta * signatureAnchor.speed * (2.2 / Math.max(0.8, baseRadius));
+
+    for (let i = 0; i < signatureGlyph.length; i += 1) {
+      const i3 = i * 3;
+      const [gx, gy] = signatureGlyph[i];
+      const offsetX = gx - glyphCenterX;
+      const orbitAngle = signatureAnchor.angle + offsetX * angleSpread;
+      const orbitRadius = baseRadius + offsetX * radialSpread;
+
+      positions[i3 + 0] = Math.cos(orbitAngle) * orbitRadius;
+      positions[i3 + 1] = signatureAnchor.vertical + (gy - 0.38) * verticalScale + Math.sin(elapsed * 1.8 + i * 0.35) * 0.008;
+      positions[i3 + 2] = Math.sin(orbitAngle) * orbitRadius;
+    }
+
+    signaturePoints.geometry.attributes.position.needsUpdate = true;
+    signaturePoints.material.opacity = 0.82 + Math.sin(elapsed * 2.2) * 0.12;
+  }
+
   function update(delta, elapsed) {
     disk.rotation.z += delta * 0.24;
     disk.material.uniforms.uTime.value = elapsed;
@@ -232,6 +301,8 @@ export function createBlackHole(root, config, qualityPreset) {
     }
 
     streams.geometry.attributes.position.needsUpdate = true;
+
+    updateSignature(elapsed, delta);
 
     jets.visible = config.showJets;
     jets.rotation.y += delta * 0.3;
