@@ -138,26 +138,26 @@ export function createBlackHole(root, config, qualityPreset) {
   group.add(streams);
 
   const signatureSegments = [
-    [[0.0, 0.0], [0.35, 1.0], [0.7, 0.0]],
-    [[0.18, 0.45], [0.52, 0.45]],
+    [[0.0, 0.08], [0.42, 1.08], [0.82, 0.06]],
+    [[0.2, 0.5], [0.62, 0.5]],
 
-    [[1.15, 0.0], [1.15, 1.0], [1.78, 1.0], [1.78, 0.6], [1.15, 0.6]],
-    [[1.15, 0.6], [1.95, 0.0]],
+    [[2.2, -0.04], [2.2, 0.96], [2.9, 0.96], [2.9, 0.56], [2.2, 0.56]],
+    [[2.2, 0.56], [3.16, -0.08]],
 
-    [[2.35, 1.0], [2.35, 0.0], [2.95, 0.0]],
+    [[4.65, 0.94], [4.65, -0.08], [5.36, -0.08]],
 
-    [[3.35, 0.0], [3.35, 1.0]],
-    [[3.35, 1.0], [4.05, 1.0]],
-    [[3.35, 0.5], [3.95, 0.5]],
-    [[3.35, 0.0], [4.05, 0.0]],
+    [[6.82, 0.12], [6.82, 1.06]],
+    [[6.82, 1.06], [7.7, 1.02]],
+    [[6.82, 0.58], [7.52, 0.56]],
+    [[6.82, 0.12], [7.72, 0.12]],
 
-    [[4.45, 0.0], [4.45, 1.0]],
-    [[4.45, 1.0], [5.25, 0.0]],
-    [[5.25, 0.0], [5.25, 1.0]],
+    [[9.35, -0.1], [9.35, 0.92]],
+    [[9.35, 0.92], [10.24, -0.06]],
+    [[10.24, -0.06], [10.24, 0.88]],
 
-    [[5.65, 1.0], [6.35, 1.0]],
-    [[6.0, 1.0], [6.0, 0.0]],
-    [[5.65, 0.0], [6.35, 0.0]]
+    [[11.7, 0.9], [12.46, 0.92]],
+    [[12.08, 0.9], [12.08, -0.06]],
+    [[11.72, -0.06], [12.44, -0.06]]
   ];
 
   const signatureLocalPoints = [];
@@ -173,6 +173,16 @@ export function createBlackHole(root, config, qualityPreset) {
       previousIndex = idx;
     });
   });
+
+  const signatureBounds = signatureLocalPoints.reduce((acc, [x, y]) => {
+    acc.minX = Math.min(acc.minX, x);
+    acc.maxX = Math.max(acc.maxX, x);
+    acc.minY = Math.min(acc.minY, y);
+    acc.maxY = Math.max(acc.maxY, y);
+    return acc;
+  }, { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
+  const glyphCenterX = (signatureBounds.minX + signatureBounds.maxX) * 0.5;
+  const glyphCenterY = (signatureBounds.minY + signatureBounds.maxY) * 0.5;
 
   const signaturePositions = new Float32Array(signatureLocalPoints.length * 3);
   const signatureColors = new Float32Array(signatureLocalPoints.length * 3);
@@ -238,8 +248,8 @@ export function createBlackHole(root, config, qualityPreset) {
     speed: 0.62,
     radiusScale: 3.45,
     vertical: 0.04,
-    xScale: 0.56,
-    yScale: 0.56
+    xScale: 0.48,
+    yScale: 0.5
   };
 
   const jetCount = 360;
@@ -307,8 +317,6 @@ export function createBlackHole(root, config, qualityPreset) {
     const colors = signaturePoints.geometry.attributes.color.array;
     const linePositions = signatureLines.geometry.attributes.position.array;
     const baseRadius = config.eventHorizonRadius * signatureAnchor.radiusScale;
-    const glyphCenterX = 3.12;
-    const glyphCenterY = 0.5;
 
     signatureAnchor.angle += delta * signatureAnchor.speed * (2.2 / Math.max(0.8, baseRadius));
     const radial = new THREE.Vector3(Math.cos(signatureAnchor.angle), 0, Math.sin(signatureAnchor.angle));
