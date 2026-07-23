@@ -261,32 +261,38 @@ function animate() {
 }
 
 async function init() {
-  updateLoading(12, 'Renderer');
   try {
+    updateLoading(12, 'Renderer');
     sceneContext = createScene(canvas, config, qualityPreset.maxPixelRatio);
+
+    updateLoading(36, 'Galaxy system');
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    buildSystems();
+
+    updateLoading(58, 'Camera');
+    cameraController = createCameraController(sceneContext.camera, canvas, config, { reducedMotion });
+
+    updateLoading(76, 'Interface');
+    createGui();
+    bindUiEvents();
+
+    updateLoading(100, 'Ready');
+    hideLoading();
+    animate();
   } catch (err) {
-    const isUnavailable = err?.message === 'WEBGL_UNAVAILABLE';
-    const hint = isUnavailable
-      ? 'WebGL context could not be created. See the tips below.'
-      : `Renderer error: ${err?.message || 'unknown'}. See the tips below.`;
-    showWebGLError(hint);
-    return;
+    const msg = err?.message || String(err) || 'Unknown error';
+    console.error('[Singularity] Fatal init error:', err);
+    showWebGLError(msg);
   }
-
-  updateLoading(36, 'Galaxy system');
-  await new Promise((resolve) => requestAnimationFrame(resolve));
-  buildSystems();
-
-  updateLoading(58, 'Camera');
-  cameraController = createCameraController(sceneContext.camera, canvas, config, { reducedMotion });
-
-  updateLoading(76, 'Interface');
-  createGui();
-  bindUiEvents();
-
-  updateLoading(100, 'Ready');
-  hideLoading();
-  animate();
 }
+
+// Catch unhandled errors and surface them in the UI
+window.addEventListener('error', (event) => {
+  console.error('[Singularity] Unhandled error:', event.error);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[Singularity] Unhandled promise rejection:', event.reason);
+});
 
 init();
