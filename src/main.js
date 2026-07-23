@@ -81,19 +81,41 @@ function hideLoading() {
   }, 550);
 }
 
+function makePlainRenderer() {
+  return {
+    enabled: false,
+    render: () => sceneContext.renderer.render(sceneContext.scene, sceneContext.camera),
+    resize: () => {},
+    setGlow: () => {},
+    dispose: () => {}
+  };
+}
+
 function buildSystems() {
+  console.log('[Singularity] buildSystems: creating galaxy...');
   galaxySystem = createGalaxy(sceneContext.root, config, qualityPreset);
+
+  console.log('[Singularity] buildSystems: creating black hole...');
   blackHoleSystem = createBlackHole(sceneContext.root, config, qualityPreset);
+
+  console.log('[Singularity] buildSystems: creating star field...');
   starFieldSystem = createStarField(sceneContext.root, qualityPreset);
 
-  postProcessing = createPostProcessing(
-    sceneContext.renderer,
-    sceneContext.scene,
-    sceneContext.camera,
-    qualityPreset.bloom,
-    config.glowIntensity
-  );
+  console.log('[Singularity] buildSystems: creating post-processing (bloom=' + qualityPreset.bloom + ')...');
+  try {
+    postProcessing = createPostProcessing(
+      sceneContext.renderer,
+      sceneContext.scene,
+      sceneContext.camera,
+      qualityPreset.bloom,
+      config.glowIntensity
+    );
+  } catch (e) {
+    console.warn('[Singularity] Post-processing failed, falling back to plain render:', e.message);
+    postProcessing = makePlainRenderer();
+  }
 
+  console.log('[Singularity] buildSystems: done.');
   sceneContext.resize(qualityPreset.maxPixelRatio);
   galaxySystem.setPixelRatio(qualityPreset.maxPixelRatio);
 }
